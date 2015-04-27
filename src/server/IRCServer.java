@@ -9,9 +9,11 @@ import java.util.Scanner;
 
 public class IRCServer implements Runnable {
 
-	ServerSocket serverSocket;
-	Socket clientSocket;
-	Scanner scanner;
+	private ServerSocket serverSocket;
+	private Socket clientSocket;
+	private Scanner scanner;
+
+	private static final String RPL_WELCOME = "001"; 
 
 	@Override
 	public void run() {
@@ -28,19 +30,27 @@ public class IRCServer implements Runnable {
 				clientSocket = serverSocket.accept();
 
 				System.out.println("Got connection");
+
+				InputStream inStream = clientSocket.getInputStream();
+				PrintWriter outStream = new PrintWriter(clientSocket.getOutputStream());
+				scanner = new Scanner(inStream);
 				
 				while (true) {
-					InputStream inStream = clientSocket.getInputStream();
-
-					scanner = new Scanner(inStream);
-
 					while (scanner.hasNext()) {
-						String input = scanner.next();
+						String input = scanner.nextLine();
 						System.out.println(input);
 
-						PrintWriter outStream = new PrintWriter(clientSocket.getOutputStream());
-						outStream.println(input);
-						outStream.flush();
+						if (input.startsWith("NICK")) {
+							String nick = input.split("\\s")[1];
+							
+							outStream.println(RPL_WELCOME + " " + nick);
+							outStream.flush();
+						}
+						
+						if (input.startsWith("QUIT")) {
+							outStream.println("ERROR");
+							outStream.flush();
+						}
 					}
 				}
 				
