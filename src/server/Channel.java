@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class Channel {
 
-	private ArrayList<String> members;
+	private ArrayList<String> members = new ArrayList<>();
 	private String name;
 	private String topic;
 	

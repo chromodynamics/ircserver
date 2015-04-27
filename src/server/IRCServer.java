@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class IRCServer implements Runnable {
@@ -12,6 +13,7 @@ public class IRCServer implements Runnable {
 	private ServerSocket serverSocket;
 	private Socket clientSocket;
 	private Scanner scanner;
+	private ArrayList<Channel> channels = new ArrayList<>();
 
 	private static final String RPL_WELCOME = "001"; 
 
@@ -34,6 +36,7 @@ public class IRCServer implements Runnable {
 				InputStream inStream = clientSocket.getInputStream();
 				PrintWriter outStream = new PrintWriter(clientSocket.getOutputStream());
 				scanner = new Scanner(inStream);
+				String nick = null;
 				
 				while (true) {
 					while (scanner.hasNext()) {
@@ -41,7 +44,7 @@ public class IRCServer implements Runnable {
 						System.out.println(input);
 
 						if (input.startsWith("NICK")) {
-							String nick = input.split("\\s")[1];
+							nick = input.split("\\s")[1];
 							
 							outStream.println(RPL_WELCOME + " " + nick);
 							outStream.flush();
@@ -49,6 +52,27 @@ public class IRCServer implements Runnable {
 						
 						if (input.startsWith("QUIT")) {
 							outStream.println("ERROR");
+							outStream.flush();
+						}
+						
+						if (input.startsWith("JOIN")) {
+							String channelName = input.split("\\s")[1];
+							
+							System.out.println(channelName);
+							
+							if (!channels.contains(channelName)) {
+								Channel channel = new Channel(channelName, "");
+								channels.add(channel);
+								channel.addUser(nick);
+							} else {
+								channels.get(channels.indexOf(channelName)).addUser(nick);
+							}
+							
+							outStream.println(":eith!kvirc@127.0.0.1" + " " + input);
+							outStream.println(":localhost 331" + " " + channelName + " :no topic");
+							outStream.println(":localhost 353" + " " + channelName + " :eith!kvirc@127.0.0.1");
+							outStream.println(":localhost 366" + " " + channelName + " :END OF NAMES");
+//							outStream.println(channels.get(channels.indexOf(channelName)).getTopic());
 							outStream.flush();
 						}
 					}
