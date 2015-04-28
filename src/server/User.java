@@ -11,20 +11,25 @@ public class User implements Runnable {
 
 	private InputStream inStream;
 	private Scanner scanner;
+	private DatabaseFacade db;
 
 	private List<Channel> channels;
 	private LinkedBlockingQueue<String> outputQueue = new LinkedBlockingQueue<>();
 	private Thread consumerThread;
 
 	private String nick;
+	private String pass;
 	private String user;
 	private String host;
+	
+	boolean passSent;
 
 	public User(Socket clientSocket, List<Channel> channels) throws IOException {
 		this.channels = channels;
 		inStream = clientSocket.getInputStream();
 		scanner = new Scanner(inStream);
-
+		db = new DatabaseFacade();
+		
 		UserOutput consumer = new UserOutput(outputQueue, clientSocket.getOutputStream());
 		consumerThread = new Thread(consumer);
 	}
@@ -42,8 +47,21 @@ public class User implements Runnable {
 			String command = tokens[0];
 
 			switch (command) {
+			case "PASS":
+				pass = tokens[1].replace(":", "");
+				passSent = true;
+				break;
+				
 			case "NICK":
 				nick = tokens[1];
+
+				if (!db.userExists(nick)) {
+					db.insertUser(nick, "");
+				} else if (passSent) {
+					if (!db.checkPassword(nick, pass)) {
+						input = "QUIT";
+					}
+				}
 				break;
 
 			case "USER":
