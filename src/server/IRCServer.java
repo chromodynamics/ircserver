@@ -4,12 +4,13 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.List;
 
 public class IRCServer implements Runnable {
 
 	private ServerSocket serverSocket;
 	private Socket clientSocket;
-	private ArrayList<Channel> channels = new ArrayList<>();
+	private List<Channel> channels = new ArrayList<>();
 	
 	@Override
 	public void run() {
@@ -26,6 +27,7 @@ public class IRCServer implements Runnable {
 				clientSocket = serverSocket.accept();
 				System.out.println("Got connection");
 
+				System.out.println("Spawning user thread");
 				User user = new User(clientSocket, channels);
 				Thread userThread = new Thread(user);
 				userThread.start();

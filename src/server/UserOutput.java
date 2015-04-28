@@ -4,12 +4,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.concurrent.LinkedBlockingQueue;
 
-public class UserOutputQueueConsumer implements Runnable {
+public class UserOutput implements Runnable {
 
 	private LinkedBlockingQueue<String> queue;
 	private OutputStream outputStream;
 
-	public UserOutputQueueConsumer(LinkedBlockingQueue<String> queue, OutputStream outputStream) {
+	public UserOutput(LinkedBlockingQueue<String> queue, OutputStream outputStream) {
 		this.queue = queue;
 		this.outputStream = outputStream;
 	}

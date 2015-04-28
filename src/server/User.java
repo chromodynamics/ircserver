@@ -3,7 +3,7 @@ package server;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -12,7 +12,7 @@ public class User implements Runnable {
 	private InputStream inStream;
 	private Scanner scanner;
 
-	private ArrayList<Channel> channels;
+	private List<Channel> channels;
 	private LinkedBlockingQueue<String> outputQueue = new LinkedBlockingQueue<>();
 	private Thread consumerThread;
 
@@ -20,12 +20,12 @@ public class User implements Runnable {
 	private String user;
 	private String host;
 
-	public User(Socket clientSocket, ArrayList<Channel> channels) throws IOException {
+	public User(Socket clientSocket, List<Channel> channels) throws IOException {
 		this.channels = channels;
 		inStream = clientSocket.getInputStream();
 		scanner = new Scanner(inStream);
 
-		UserOutputQueueConsumer consumer = new UserOutputQueueConsumer(outputQueue, clientSocket.getOutputStream());
+		UserOutput consumer = new UserOutput(outputQueue, clientSocket.getOutputStream());
 		consumerThread = new Thread(consumer);
 	}
 
@@ -38,29 +38,26 @@ public class User implements Runnable {
 			String input = scanner.nextLine();
 			System.out.println("client request: " + input);
 
-			if (input.startsWith("NICK")) {
-				nick = input.split("\\s")[1];
-			}
+			String[] tokens = input.split("\\s");
+			String command = tokens[0];
 
-			if (input.startsWith("USER")) {
-				String[] tokens = input.split("\\s");
+			switch (command) {
+			case "NICK":
+				nick = tokens[1];
+				break;
+
+			case "USER":
 				user = tokens[1];
 				host = tokens[3];
-
 				outputQueue.add(":server 001" + " " + nick + " :Welcome to the eIRC server!");
-			}
-
-			if (input.startsWith("QUIT")) {
-				System.out.println("quitting...");
 				break;
-			}
 
-			if (input.startsWith("PING")) {
+			case "PING":
 				outputQueue.add(":server PONG");
-			}
+				break;
 
-			if (input.startsWith("JOIN")) {
-				String channelName = input.split("\\s")[1];
+			case "JOIN":
+				String channelName = tokens[1];
 
 				if (!channels.contains(channelName)) {
 					Channel channel = new Channel(channelName);
@@ -71,6 +68,12 @@ public class User implements Runnable {
 				}
 
 				outputQueue.add(":" + userMask() + " " + input);
+				break;
+			}
+
+			if (input.startsWith("QUIT")) {
+				System.out.println("quitting...");
+				break;
 			}
 		}
 
@@ -83,8 +86,6 @@ public class User implements Runnable {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
-		return;
 	}
 
 	private String userMask() {
