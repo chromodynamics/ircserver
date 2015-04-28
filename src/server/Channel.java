@@ -13,6 +13,10 @@ public class Channel {
 		this.topic = topic;
 	}
 	
+	public Channel(String name) {
+		this(name, "");
+	}
+	
 	public void addUser(String name) {
 		members.add(name);
 	}
