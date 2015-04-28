@@ -32,7 +32,6 @@ public class IRCServer implements Runnable {
 
 			} catch (IOException e) {
 				e.printStackTrace();
-
 			}
 		}
 	}

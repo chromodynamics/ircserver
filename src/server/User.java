@@ -11,11 +11,11 @@ public class User implements Runnable {
 
 	private InputStream inStream;
 	private Scanner scanner;
-	
+
 	private ArrayList<Channel> channels;
 	private LinkedBlockingQueue<String> outputQueue = new LinkedBlockingQueue<>();
 	private Thread consumerThread;
-	
+
 	private String nick;
 	private String user;
 	private String host;
@@ -33,48 +33,60 @@ public class User implements Runnable {
 	public void run() {
 
 		consumerThread.start();
-		
-		while (true) {
-			while (scanner.hasNext()) {
-				String input = scanner.nextLine();
-				System.out.println(input);
 
-				if (input.startsWith("NICK")) {
-					nick = input.split("\\s")[1];
+		while (scanner.hasNext()) {
+			String input = scanner.nextLine();
+			System.out.println("client request: " + input);
+
+			if (input.startsWith("NICK")) {
+				nick = input.split("\\s")[1];
+			}
+
+			if (input.startsWith("USER")) {
+				String[] tokens = input.split("\\s");
+				user = tokens[1];
+				host = tokens[3];
+
+				outputQueue.add(":server 001" + " " + nick + " :Welcome to the eIRC server!");
+			}
+
+			if (input.startsWith("QUIT")) {
+				System.out.println("quitting...");
+				break;
+			}
+
+			if (input.startsWith("PING")) {
+				outputQueue.add(":server PONG");
+			}
+
+			if (input.startsWith("JOIN")) {
+				String channelName = input.split("\\s")[1];
+
+				if (!channels.contains(channelName)) {
+					Channel channel = new Channel(channelName);
+					channels.add(channel);
+					channel.addUser(nick);
+				} else {
+					channels.get(channels.indexOf(channelName)).addUser(nick);
 				}
 
-				if (input.startsWith("USER")) {
-					String[] tokens = input.split("\\s");
-					user = tokens[1];
-					host = tokens[3];
-					
-					outputQueue.add(":server 001" + " " + nick + " :Welcome to the eIRC server!");
-				}
-				
-				if (input.startsWith("QUIT")) {
-				}
-				
-				if (input.startsWith("PING")) {
-					outputQueue.add(":server PONG");
-				}
-
-				if (input.startsWith("JOIN")) {
-					String channelName = input.split("\\s")[1];
-
-					if (!channels.contains(channelName)) {
-						Channel channel = new Channel(channelName);
-						channels.add(channel);
-						channel.addUser(nick);
-					} else {
-						channels.get(channels.indexOf(channelName)).addUser(nick);
-					}
-
-					outputQueue.add(":" + userMask() + " " + input);
-				}
+				outputQueue.add(":" + userMask() + " " + input);
 			}
 		}
+
+		System.out.println("interrupting consumer thread...");
+		consumerThread.interrupt();
+
+		try {
+			System.out.println("closing inputStream...");
+			inStream.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return;
 	}
-	
+
 	private String userMask() {
 		return nick + "!" + user + "@" + host;
 	}
