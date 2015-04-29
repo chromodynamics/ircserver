@@ -20,21 +20,6 @@ public class DatabaseFacade {
 		}
 	}
 
-	public static void main(String args[]) {
-		Connection c = null;
-		try {
-			Class.forName("org.sqlite.JDBC");
-			c = DriverManager.getConnection("jdbc:sqlite:users.db");
-
-			Statement statement = c.createStatement();
-			String sql = "INSERT INTO USER (NICK) VALUES ('eith');";
-			statement.executeUpdate(sql);
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
 	public void insertUser(String nick, String pass) {
 		try {
 			String sql = "INSERT INTO USER (NICK, PASS) VALUES ('" + nick + "', '" + pass + "');";
@@ -58,12 +43,12 @@ public class DatabaseFacade {
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-		}
-
-		try {
-			statement.close();
-		} catch (SQLException e) {
-			e.printStackTrace();
+		}finally {
+			try {
+				statement.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
 		}
 		return false;
 	}
@@ -73,24 +58,44 @@ public class DatabaseFacade {
 			String sql = "SELECT NICK, PASS FROM USER WHERE NICK ='" + nick + "' AND PASS='" + pass + "';";
 			statement = conn.createStatement();
 			ResultSet results = statement.executeQuery(sql);
-			
+
 			if (results.next()) {
-				statement.close();
 				return true;
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-		}
-
-		try {
-			statement.close();
-		} catch (SQLException e) {
-			e.printStackTrace();
+		}finally {
+			try {
+				statement.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
 		}
 		return false;
 	}
 
 	public void insertChannel() {
 
+	}
+
+	public boolean alreadyRegistered(String nick) {
+		try {
+			String sql = "SELECT PASS FROM USER WHERE NICK ='" + nick + "';";
+			statement = conn.createStatement();
+			ResultSet results = statement.executeQuery(sql);
+
+			if (results.next()) {
+				return true;
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				statement.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		return false;
 	}
 }

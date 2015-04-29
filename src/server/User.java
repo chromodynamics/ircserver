@@ -48,6 +48,11 @@ public class User implements Runnable {
 
 			switch (command) {
 			case "PASS":
+				if (tokens.length < 2) {
+					outputQueue.add(":server 461 " + nick + " :No password given");
+					break;
+				}
+				
 				pass = tokens[1].replace(":", "");
 				passSent = true;
 				break;
@@ -79,12 +84,14 @@ public class User implements Runnable {
 			case "JOIN":
 				String channelName = tokens[1];
 
-				if (!channels.contains(channelName)) {
+				if (!channels.contains(new Channel(channelName))) {
+					System.out.println("Channel " + channelName + " doesnt exist, creating...");
 					Channel channel = new Channel(channelName);
 					channels.add(channel);
 					channel.addUser(nick);
 				} else {
-					channels.get(channels.indexOf(channelName)).addUser(nick);
+					System.out.println("Adding user to existing channel " + channelName);
+					channels.get(channels.indexOf(new Channel(channelName))).addUser(nick);
 				}
 
 				outputQueue.add(":" + userMask() + " " + input);
