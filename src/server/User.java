@@ -3,7 +3,7 @@ package server;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
-import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -13,7 +13,7 @@ public class User implements Runnable {
 	private Scanner scanner;
 	private DatabaseFacade db;
 
-	private List<Channel> channels;
+	private Map<String, Channel> channels;
 	private LinkedBlockingQueue<String> outputQueue = new LinkedBlockingQueue<>();
 	private Thread consumerThread;
 
@@ -24,7 +24,7 @@ public class User implements Runnable {
 
 	boolean passSent;
 
-	public User(Socket clientSocket, List<Channel> channels) throws IOException {
+	public User(Socket clientSocket, Map<String, Channel> channels) throws IOException {
 		this.channels = channels;
 		inStream = clientSocket.getInputStream();
 		scanner = new Scanner(inStream);
@@ -52,7 +52,7 @@ public class User implements Runnable {
 					outputQueue.add(":server 461 " + nick + " :No password given");
 					break;
 				}
-				
+
 				pass = tokens[1].replace(":", "");
 				passSent = true;
 				break;
@@ -83,18 +83,30 @@ public class User implements Runnable {
 
 			case "JOIN":
 				String channelName = tokens[1];
+				Channel channel = null;
 
-				if (!channels.contains(new Channel(channelName))) {
-					System.out.println("Channel " + channelName + " doesnt exist, creating...");
-					Channel channel = new Channel(channelName);
-					channels.add(channel);
-					channel.addUser(nick);
-				} else {
-					System.out.println("Adding user to existing channel " + channelName);
-					channels.get(channels.indexOf(new Channel(channelName))).addUser(nick);
+				synchronized (channels) {
+					if (!channels.containsKey(channelName)) {
+						System.out.println("Channel " + channelName + " doesnt exist, creating...");
+						channel = new Channel(channelName);
+						channels.put(channelName, channel);
+						channel.addUser(this);
+					} else {
+						System.out.println("Adding user to existing channel " + channelName);
+						channel = channels.get(channelName);
+						channel.addUser(this);
+					}
 				}
 
 				outputQueue.add(":" + userMask() + " " + input);
+
+				synchronized (channels) {
+					for (User user : channel.getMembers()) {
+						outputQueue.add(":server 353 " + nick + " = " + channelName + " :" + user.getNick());
+					}
+				}
+
+				outputQueue.add(":server 366 " + nick + " " + channelName + " :end of /NAMES list");
 				break;
 			}
 
@@ -117,5 +129,13 @@ public class User implements Runnable {
 
 	private String userMask() {
 		return nick + "!" + user + "@" + host;
+	}
+	
+	public void sendMessage(String message) {
+		outputQueue.add(message);
+	}
+	
+	public String getNick() {
+		return nick;
 	}
 }

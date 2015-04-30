@@ -3,14 +3,14 @@ package server;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public class IRCServer implements Runnable {
 
 	private ServerSocket serverSocket;
 	private Socket clientSocket;
-	private List<Channel> channels = new ArrayList<>();
+	private Map<String, Channel> channels = new HashMap<>();
 	
 	@Override
 	public void run() {

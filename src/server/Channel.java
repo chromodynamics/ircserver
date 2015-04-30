@@ -1,10 +1,11 @@
 package server;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Channel {
 
-	private ArrayList<String> members = new ArrayList<>();
+	private ArrayList<User> members = new ArrayList<>();
 	private String name;
 	private String topic;
 	
@@ -17,7 +18,7 @@ public class Channel {
 		this(name, "");
 	}
 	
-	public void addUser(String name) {
+	public void addUser(User name) {
 		members.add(name);
 	}
 	
@@ -35,5 +36,13 @@ public class Channel {
 	
 	public String getName() {
 		return name;
+	}
+	
+	public List<User> getMembers() {
+		return members;
+	}
+	
+	public void msg(String msg) {
+		
 	}
 }
