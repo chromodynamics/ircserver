@@ -22,7 +22,7 @@ public class Channel {
 		members.add(nick);
 	}
 	
-	public void removeUser(String nick, String userMask) {
+	public void removeUser(User nick, String userMask) {
 		members.remove(nick);
 		for (User user : members) {
 			user.sendMessage(":" + userMask + " PART " + name);

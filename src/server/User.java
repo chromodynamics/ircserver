@@ -129,7 +129,7 @@ public class User implements Runnable {
 			if (input.startsWith("QUIT")) {
 				System.out.println("quitting...");
 				for (Map.Entry<String, Channel> entry : channels.entrySet()) {
-					entry.getValue().removeUser(nick, userMask());
+					entry.getValue().removeUser(this, userMask());
 				}
 				break;
 			}
