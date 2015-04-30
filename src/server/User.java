@@ -52,14 +52,18 @@ public class User implements Runnable {
 					outputQueue.add(":server 461 " + nick + " :No password given");
 					break;
 				}
-
+				
 				pass = tokens[1].replace(":", "");
 				passSent = true;
 				break;
 
 			case "NICK":
+				if (tokens.length < 2) {
+					outputQueue.add(":server 431 :No nickname given");
+					break;
+				}
 				nick = tokens[1];
-
+				
 				synchronized (db) {
 					if (!db.userExists(nick)) {
 						db.insertUser(nick, "");
@@ -72,6 +76,10 @@ public class User implements Runnable {
 				break;
 
 			case "USER":
+				if (tokens.length < 5) {
+					outputQueue.add(":server 461 :Missing parameters");
+					break;
+				}
 				user = tokens[1];
 				host = tokens[3];
 				outputQueue.add(":server 001" + " " + nick + " :Welcome to the eIRC server!");
@@ -120,6 +128,9 @@ public class User implements Runnable {
 
 			if (input.startsWith("QUIT")) {
 				System.out.println("quitting...");
+				for (Map.Entry<String, Channel> entry : channels.entrySet()) {
+					entry.getValue().removeUser(nick, userMask());
+				}
 				break;
 			}
 		}

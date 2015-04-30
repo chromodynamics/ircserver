@@ -18,12 +18,15 @@ public class Channel {
 		this(name, "");
 	}
 	
-	public void addUser(User name) {
-		members.add(name);
+	public void addUser(User nick) {
+		members.add(nick);
 	}
 	
-	public void removeUser(String name) {
-		members.remove(name);
+	public void removeUser(String nick, String userMask) {
+		members.remove(nick);
+		for (User user : members) {
+			user.sendMessage(":" + userMask + " PART " + name);
+		}
 	}
 	
 	public String getTopic() {
