@@ -42,7 +42,11 @@ public class Channel {
 		return members;
 	}
 	
-	public void msg(String msg) {
-		
+	public void sendMessage(String message, String from) {
+		for (User user : members) {
+			if (!user.getNick().equals(from)) {
+				user.sendMessage(message);
+			}
+		}
 	}
 }

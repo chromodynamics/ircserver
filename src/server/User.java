@@ -108,6 +108,14 @@ public class User implements Runnable {
 
 				outputQueue.add(":server 366 " + nick + " " + channelName + " :end of /NAMES list");
 				break;
+				
+			case "PRIVMSG":
+				String target = tokens[1];
+				if (channels.containsKey(target)) {
+					channel = channels.get(target);
+					channel.sendMessage(":" + userMask() + " " + input, nick);
+				}
+				break;
 			}
 
 			if (input.startsWith("QUIT")) {
